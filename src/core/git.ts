@@ -155,19 +155,39 @@ export class GitService {
   async changeCommitDate(commitHash: string, newDate: Date): Promise<void> {
     const isoDate = newDate.toISOString();
 
-    // Находим родительский коммит
-    const parent = await this.git.revparse([`${commitHash}^`]);
+    // Проверяем, является ли это root коммитом (первым в репозитории)
+    let isRootCommit = false;
+    try {
+      await this.git.revparse([`${commitHash}^`]);
+    } catch {
+      isRootCommit = true;
+    }
 
-    // Выполняем интерактивный rebase с изменением даты
-    await this.git.raw([
-      'rebase',
-      '--interactive',
-      '--autosquash',
-      '--autostash',
-      parent.trim(),
-      '--exec',
-      `GIT_COMMITTER_DATE="${isoDate}" git commit --amend --no-edit --date="${isoDate}"`,
-    ]);
+    // Если это root коммит, используем другой подход
+    if (isRootCommit) {
+      // Для root коммита используем filter-branch или прямое изменение через --root
+      await this.git.raw([
+        'rebase',
+        '--root',
+        '--committer-date-is-author-date',
+        '--exec',
+        `GIT_COMMITTER_DATE="${isoDate}" git commit --amend --no-edit --date="${isoDate}"`,
+      ]);
+    } else {
+      // Находим родительский коммит
+      const parent = await this.git.revparse([`${commitHash}^`]);
+
+      // Выполняем интерактивный rebase с изменением даты
+      await this.git.raw([
+        'rebase',
+        '--interactive',
+        '--autosquash',
+        '--autostash',
+        parent.trim(),
+        '--exec',
+        `GIT_COMMITTER_DATE="${isoDate}" git commit --amend --no-edit --date="${isoDate}"`,
+      ]);
+    }
   }
 
   /**
