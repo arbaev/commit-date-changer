@@ -149,45 +149,62 @@ export class GitService {
   }
 
   /**
-   * Изменить дату коммита через git rebase
+   * Изменить дату коммита через git filter-branch
    * Изменяет ОБЕ даты: author date и committer date
+   *
+   * ВАЖНО: Это изменяет хеши всех коммитов после измененного!
    */
   async changeCommitDate(commitHash: string, newDate: Date): Promise<void> {
-    const isoDate = newDate.toISOString();
+    // Форматируем дату с учетом локального timezone
+    // Git ожидает формат: "YYYY-MM-DD HH:MM:SS +ZZZZ"
+    const offset = -newDate.getTimezoneOffset();
+    const offsetHours = Math.floor(Math.abs(offset) / 60)
+      .toString()
+      .padStart(2, '0');
+    const offsetMinutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
+    const offsetSign = offset >= 0 ? '+' : '-';
+    const timezone = `${offsetSign}${offsetHours}${offsetMinutes}`;
 
-    // Проверяем, является ли это root коммитом (первым в репозитории)
-    let isRootCommit = false;
-    try {
-      await this.git.revparse([`${commitHash}^`]);
-    } catch {
-      isRootCommit = true;
-    }
+    const year = newDate.getFullYear();
+    const month = (newDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = newDate.getDate().toString().padStart(2, '0');
+    const hours = newDate.getHours().toString().padStart(2, '0');
+    const minutes = newDate.getMinutes().toString().padStart(2, '0');
+    const seconds = newDate.getSeconds().toString().padStart(2, '0');
 
-    // Если это root коммит, используем другой подход
-    if (isRootCommit) {
-      // Для root коммита используем filter-branch или прямое изменение через --root
-      await this.git.raw([
-        'rebase',
-        '--root',
-        '--committer-date-is-author-date',
-        '--exec',
-        `GIT_COMMITTER_DATE="${isoDate}" git commit --amend --no-edit --date="${isoDate}"`,
-      ]);
-    } else {
-      // Находим родительский коммит
-      const parent = await this.git.revparse([`${commitHash}^`]);
+    const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${timezone}`;
 
-      // Выполняем интерактивный rebase с изменением даты
-      await this.git.raw([
-        'rebase',
-        '--interactive',
-        '--autosquash',
-        '--autostash',
-        parent.trim(),
-        '--exec',
-        `GIT_COMMITTER_DATE="${isoDate}" git commit --amend --no-edit --date="${isoDate}"`,
-      ]);
-    }
+    // Используем git filter-branch для изменения даты конкретного коммита
+    // Это изменит хеш этого коммита и всех последующих
+    const script = `
+if [ "$GIT_COMMIT" = "${commitHash}" ]; then
+  export GIT_AUTHOR_DATE="${formattedDate}"
+  export GIT_COMMITTER_DATE="${formattedDate}"
+fi
+`;
+
+    await this.git.raw([
+      'filter-branch',
+      '-f',
+      '--env-filter',
+      script,
+      '--',
+      '--all',
+    ]);
+
+    // Очистка резервных копий
+    await this.git.raw(['for-each-ref', '--format=%(refname)', 'refs/original/'])
+      .then(async (refs) => {
+        if (refs.trim()) {
+          const refList = refs.trim().split('\n');
+          for (const ref of refList) {
+            await this.git.raw(['update-ref', '-d', ref]);
+          }
+        }
+      })
+      .catch(() => {
+        // Игнорируем ошибки, если нет резервных копий
+      });
   }
 
   /**
