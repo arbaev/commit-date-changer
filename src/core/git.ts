@@ -155,24 +155,9 @@ export class GitService {
    * ВАЖНО: Это изменяет хеши всех коммитов после измененного!
    */
   async changeCommitDate(commitHash: string, newDate: Date): Promise<void> {
-    // Форматируем дату с учетом локального timezone
-    // Git ожидает формат: "YYYY-MM-DD HH:MM:SS +ZZZZ"
-    const offset = -newDate.getTimezoneOffset();
-    const offsetHours = Math.floor(Math.abs(offset) / 60)
-      .toString()
-      .padStart(2, '0');
-    const offsetMinutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
-    const offsetSign = offset >= 0 ? '+' : '-';
-    const timezone = `${offsetSign}${offsetHours}${offsetMinutes}`;
-
-    const year = newDate.getFullYear();
-    const month = (newDate.getMonth() + 1).toString().padStart(2, '0');
-    const day = newDate.getDate().toString().padStart(2, '0');
-    const hours = newDate.getHours().toString().padStart(2, '0');
-    const minutes = newDate.getMinutes().toString().padStart(2, '0');
-    const seconds = newDate.getSeconds().toString().padStart(2, '0');
-
-    const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${timezone}`;
+    // Форматируем дату в ISO формате без преобразования timezone
+    // Используем toISOString() который возвращает UTC время
+    const formattedDate = newDate.toISOString();
 
     // Используем git filter-branch для изменения даты конкретного коммита
     // Это изменит хеш этого коммита и всех последующих

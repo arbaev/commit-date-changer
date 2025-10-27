@@ -30,10 +30,16 @@ export class DateValidator {
 
   /**
    * Парсить дату из ISO строки
+   * Парсим как UTC, добавляя 'Z' к строке если его нет
    */
   parseDate(dateString: string): Date | null {
     try {
-      const date = parseISO(dateString);
+      // Если строка не содержит timezone (Z или +HH:MM), добавляем Z для UTC
+      let dateStr = dateString;
+      if (!dateStr.endsWith('Z') && !dateStr.match(/[+-]\d{2}:\d{2}$/)) {
+        dateStr = dateString + 'Z';
+      }
+      const date = parseISO(dateStr);
       return isValid(date) ? date : null;
     } catch {
       return null;
