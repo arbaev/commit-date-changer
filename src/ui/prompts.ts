@@ -55,7 +55,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
       }
     }
 
-    console.log(chalk.blue("🔍 Найдено коммитов:"), commits.length);
+    console.log(chalk.yellow("🔍 Найдено коммитов:"), commits.length);
     console.log(header);
 
     // Формирование choices
@@ -129,15 +129,15 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     const formattedRange = this.validator.formatDateRange(validRange);
 
     console.log("");
-    console.log(chalk.blue("📅 Текущая дата:"), formattedCurrent);
-    console.log(chalk.gray("   Допустимый диапазон:"), formattedRange);
+    console.log(chalk.yellow("📅 Текущая дата:"), formattedCurrent);
+    console.log(chalk.green("   Допустимый диапазон:"), formattedRange);
     console.log("");
 
     // Форматируем текущую дату для предзаполнения (без секунд)
     const initialDate = currentDate.toISOString().substring(0, 16);
 
     const answer = await input({
-      message: "Введите новую дату и время (ISO формат: YYYY-MM-DDTHH:mm)",
+      message: "Введите новую дату и время (TAB для редактирования)",
       default: initialDate,
       validate: (value: string) => {
         // Если пользователь оставил текущее значение без изменений
@@ -192,7 +192,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     const formattedNew = this.validator.formatDate(newDate);
 
     console.log("");
-    console.log(chalk.blue("📋 Превью изменений:"));
+    console.log(chalk.yellow("📋 Превью изменений:"));
     console.log("   Коммит:      ", chalk.cyan(commit.hash), `"${commit.message}"`);
 
     if (commit.isPushed) {
@@ -274,6 +274,6 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
    * Показать прощание
    */
   showGoodbye(): void {
-    console.log(chalk.blue("👋 Готово!"));
+    console.log(chalk.yellow("👋 Пока!"));
   }
 }
