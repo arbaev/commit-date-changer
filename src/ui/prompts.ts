@@ -1,4 +1,5 @@
 import inquirer from "inquirer";
+import input from "@inquirer/input";
 import chalk from "chalk";
 import { Commit, DateRange } from "../types/index.js";
 import { MessageFormatter } from "../core/messages.js";
@@ -135,51 +136,47 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     // Форматируем текущую дату для предзаполнения (без секунд)
     const initialDate = currentDate.toISOString().substring(0, 16);
 
-    const answer = await inquirer.prompt([
-      {
-        type: "input",
-        name: "date",
-        message: "Введите новую дату и время (ISO формат: YYYY-MM-DDTHH:mm)",
-        default: initialDate,
-        validate: (value: string) => {
-          // Если пользователь оставил текущее значение без изменений
-          if (!value || value.trim() === "") {
-            return true; // Валидация прошла
-          }
+    const answer = await input({
+      message: "Введите новую дату и время (ISO формат: YYYY-MM-DDTHH:mm)",
+      default: initialDate,
+      validate: (value: string) => {
+        // Если пользователь оставил текущее значение без изменений
+        if (!value || value.trim() === "") {
+          return true; // Валидация прошла
+        }
 
-          // Валидация формата
-          const formatValidation = this.validator.validateISOFormat(value);
-          if (!formatValidation.isValid) {
-            return formatValidation.error || "Невалидная дата";
-          }
+        // Валидация формата
+        const formatValidation = this.validator.validateISOFormat(value);
+        if (!formatValidation.isValid) {
+          return formatValidation.error || "Невалидная дата";
+        }
 
-          // Парсинг и валидация диапазона
-          const parsedDate = this.validator.parseDate(value);
-          if (!parsedDate) {
-            return "Ошибка парсинга даты";
-          }
+        // Парсинг и валидация диапазона
+        const parsedDate = this.validator.parseDate(value);
+        if (!parsedDate) {
+          return "Ошибка парсинга даты";
+        }
 
-          const rangeValidation = this.validator.validateDate(
-            parsedDate,
-            validRange.min,
-            validRange.max,
-          );
+        const rangeValidation = this.validator.validateDate(
+          parsedDate,
+          validRange.min,
+          validRange.max,
+        );
 
-          if (!rangeValidation.isValid) {
-            return rangeValidation.error || "Дата вне допустимого диапазона";
-          }
+        if (!rangeValidation.isValid) {
+          return rangeValidation.error || "Дата вне допустимого диапазона";
+        }
 
-          return true;
-        },
+        return true;
       },
-    ]);
+    });
 
     // Если пользователь оставил поле пустым, используем текущую дату
-    if (!answer.date || answer.date.trim() === "") {
+    if (!answer || answer.trim() === "") {
       return currentDate;
     }
 
-    const newDate = this.validator.parseDate(answer.date);
+    const newDate = this.validator.parseDate(answer);
     if (!newDate) {
       throw new Error("Ошибка парсинга даты");
     }
