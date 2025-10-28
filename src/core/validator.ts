@@ -106,7 +106,9 @@ export class DateValidator {
    * Форматировать дату для отображения
    */
   formatDate(date: Date): string {
-    return date.toISOString().replace(".000Z", "").replace("Z", "");
+    // Убираем миллисекунды и Z
+    // Пример: "2025-01-15T14:30:45.123Z" -> "2025-01-15T14:30:45"
+    return date.toISOString().replace(/\.\d{3}Z$/, "");
   }
 
   /**

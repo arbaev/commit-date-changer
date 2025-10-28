@@ -11,7 +11,10 @@
     "dev": "tsx src/cli.ts",
     "build": "tsup src/cli.ts --format esm --dts --clean",
     "lint": "eslint \"src/**/*.ts\"",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "keywords": [
     "git",
@@ -36,11 +39,13 @@
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
+    "@vitest/coverage-v8": "^4.0.4",
     "eslint": "^8.56.0",
     "prettier": "^3.2.4",
     "tsup": "^8.0.1",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.4"
   },
   "engines": {
     "node": ">=18.0.0"
