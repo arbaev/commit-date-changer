@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { Commit } from "../types/index.js";
+import { t } from "../i18n.js";
 
 /**
  * Сервис для форматирования сообщений и предупреждений
@@ -17,18 +18,18 @@ export class MessageFormatter {
    */
   getInitialWarning(): string {
     return `
-${chalk.yellow("⚠️  ПРЕДУПРЕЖДЕНИЕ:")} Режим изменения запушенных коммитов
+${chalk.yellow(t("messages.warningTitle"))} ${t("messages.pushedModeTitle")}
 
-Изменение запушенных коммитов:
-- Перезаписывает историю Git
-- Требует force push
-- Может сломать работу других разработчиков
-- Может вызвать конфликты при pull
+${t("messages.pushedChangeWarning")}
+${t("messages.rewritesHistory")}
+${t("messages.requiresForce")}
+${t("messages.breakOthers")}
+${t("messages.causesConflicts")}
 
-Используйте только если:
-${chalk.green("✓")} Вы работаете в personal ветке
-${chalk.green("✓")} Никто другой не использует эту ветку
-${chalk.green("✓")} Вы понимаете последствия force push
+${t("messages.useOnlyIf")}
+${chalk.green("✓")} ${t("messages.personalBranch")}
+${chalk.green("✓")} ${t("messages.noOthers")}
+${chalk.green("✓")} ${t("messages.understandForce")}
 `;
   }
 
@@ -39,13 +40,13 @@ ${chalk.green("✓")} Вы понимаете последствия force push
     const remotesStr = commit.remotes.join(", ");
 
     return `
-${chalk.red("⚠️  ОПАСНО:")} Этот коммит УЖЕ ЗАПУШЕН
+${chalk.red(t("messages.dangerTitle"))} ${t("messages.commitAlreadyPushed")}
 
-Коммит: ${chalk.cyan(commit.hash)} "${commit.message}"
-Запушен в: ${chalk.yellow(remotesStr)}
+${t("messages.commit")} ${chalk.cyan(commit.hash)} "${commit.message}"
+${t("messages.pushedTo")} ${chalk.yellow(remotesStr)}
 
-Изменение ПОТРЕБУЕТ:
-${chalk.yellow("•")} git push --force-with-lease
+${t("messages.modificationRequires")}
+${chalk.yellow("•")} ${t("messages.forcePushCommand")}
 `;
   }
 
@@ -54,8 +55,8 @@ ${chalk.yellow("•")} git push --force-with-lease
    */
   getFinalWarning(commit: Commit): string {
     return `
-${chalk.yellow("⚠️  После изменения потребуется:")}
-   git push --force-with-lease ${commit.remotes[0] || "origin <branch>"}
+${chalk.yellow(t("messages.afterChange"))}
+   ${t("messages.forcePushCommand")} ${commit.remotes[0] || "origin <branch>"}
 `;
   }
 
@@ -66,11 +67,11 @@ ${chalk.yellow("⚠️  После изменения потребуется:")}
     const remote = commit.remotes[0] || "origin <branch>";
 
     return `
-${chalk.yellow("⚠️  ВАЖНО:")} Коммит был запушен. Для синхронизации выполните:
+${chalk.yellow(t("messages.important"))} ${t("messages.commitWasPushed")}
 
-   ${chalk.cyan(`git push --force-with-lease ${remote}`)}
+   ${chalk.cyan(`${t("messages.forcePushCommand")} ${remote}`)}
 
-${chalk.yellow("⚠️  Предупредите команду о force push!")}
+${chalk.yellow(t("messages.warnTeam"))}
 `;
   }
 
@@ -79,7 +80,7 @@ ${chalk.yellow("⚠️  Предупредите команду о force push!")
    */
   getForcePushCommand(commit: Commit): string {
     const remote = commit.remotes[0] || "origin";
-    return `git push --force-with-lease ${remote}`;
+    return `${t("messages.forcePushCommand")} ${remote}`;
   }
 
   /**

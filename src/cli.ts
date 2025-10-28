@@ -1,33 +1,33 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
-import chalk from 'chalk';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { GitService } from './core/git.js';
-import { DateValidator } from './core/validator.js';
-import { DateChanger } from './core/date-changer.js';
-import { MessageFormatter } from './core/messages.js';
-import { UIPrompts } from './ui/prompts.js';
-import { Commit } from './types/index.js';
+import { Command } from "commander";
+import chalk from "chalk";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import { GitService } from "./core/git.js";
+import { DateValidator } from "./core/validator.js";
+import { DateChanger } from "./core/date-changer.js";
+import { MessageFormatter } from "./core/messages.js";
+import { UIPrompts } from "./ui/prompts.js";
+import { Commit } from "./types/index.js";
+import { initI18n, t } from "./i18n.js";
 
 // Получение версии из package.json
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const packageJson = JSON.parse(
-  readFileSync(join(__dirname, '../package.json'), 'utf-8')
-);
+const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
 
 const program = new Command();
 
 program
-  .name('commit-date')
-  .description('Interactive CLI tool to safely change Git commit dates')
+  .name("commit-date")
+  .description("Interactive CLI tool to safely change Git commit dates")
   .version(packageJson.version)
-  .option('--allow-pushed', 'Разрешить изменение запушенных коммитов')
-  .option('--all', 'Алиас для --allow-pushed')
-  .option('--count <number>', 'Количество коммитов для отображения', '10')
+  .option("-l, --lang <language>", "Language: en (English) or ru (Русский)")
+  .option("--allow-pushed", "Allow modification of pushed commits")
+  .option("--all", "Alias for --allow-pushed")
+  .option("--count <number>", "Number of commits to display", "10")
   .parse(process.argv);
 
 const options = program.opts();
@@ -37,6 +37,9 @@ const options = program.opts();
  */
 async function main() {
   try {
+    // Инициализация i18n
+    await initI18n(options.lang);
+
     // Инициализация сервисов
     const gitService = new GitService();
     const validator = new DateValidator();
@@ -47,16 +50,14 @@ async function main() {
     // Проверка Git репозитория
     const isGitRepo = await gitService.isGitRepository();
     if (!isGitRepo) {
-      ui.showError('Текущая директория не является Git репозиторием');
+      ui.showError(t("cli.notGitRepo"));
       process.exit(1);
     }
 
     // Проверка uncommitted изменений
     const hasUncommitted = await gitService.hasUncommittedChanges();
     if (hasUncommitted) {
-      ui.showError(
-        'Есть незакоммиченные изменения. Закоммитьте или спрячьте их перед использованием утилиты'
-      );
+      ui.showError(t("cli.uncommittedChanges"));
       process.exit(1);
     }
 
@@ -66,7 +67,7 @@ async function main() {
     if (allowPushed) {
       const confirmed = await ui.confirmPushedMode();
       if (!confirmed) {
-        console.log(chalk.gray('Операция отменена'));
+        console.log(chalk.gray(t("cli.operationCancelled")));
         process.exit(0);
       }
     }
@@ -81,13 +82,9 @@ async function main() {
       commits = await gitService.getUnpushedCommits(count);
 
       if (commits.length === 0) {
-        console.log(chalk.yellow('Нет незапушенных коммитов для изменения'));
-        console.log('');
-        console.log(
-          chalk.gray(
-            'Используйте --allow-pushed для работы с запушенными коммитами (опасно!)'
-          )
-        );
+        console.log(chalk.yellow(t("cli.noUnpushedCommits")));
+        console.log("");
+        console.log(chalk.gray(t("cli.useAllowPushed")));
         process.exit(0);
       }
     }
@@ -100,8 +97,8 @@ async function main() {
         // Шаг 1: Выбор коммита
         const selectedCommit = await ui.selectCommit(commits, allowPushed);
 
-        console.log('');
-        console.log(chalk.green('✓ Выбран коммит:'), chalk.cyan(selectedCommit.hash));
+        console.log("");
+        console.log(chalk.green(t("cli.selectedCommit")), chalk.cyan(selectedCommit.hash));
 
         // Шаг 2: Определение допустимого диапазона дат
         const commitIndex = commits.findIndex((c) => c.hash === selectedCommit.hash);
@@ -121,18 +118,18 @@ async function main() {
         const newDateStr = newDate.toISOString().substring(0, 16);
 
         if (newDateStr === oldDateStr) {
-          console.log('');
-          console.log(chalk.yellow('ℹ️  Дата не изменена, пропускаем операцию'));
-          console.log('');
+          console.log("");
+          console.log(chalk.yellow(t("cli.dateUnchanged")));
+          console.log("");
         } else {
-          console.log(chalk.green('✓ Новая дата:'), validator.formatDate(newDate));
+          console.log(chalk.green(t("cli.newDate")), validator.formatDate(newDate));
 
           // Шаг 4: Подтверждение изменений
           const confirmed = await ui.confirmChanges(selectedCommit, newDate);
 
           if (!confirmed) {
-            console.log(chalk.gray('Изменение отменено'));
-            console.log('');
+            console.log(chalk.gray(t("cli.changeCancelled")));
+            console.log("");
           } else {
             // Шаг 5: Применение изменений
             await dateChanger.validateAndChange(selectedCommit, newDate, prevDate, nextDate);
@@ -154,16 +151,16 @@ async function main() {
         }
       } catch (error) {
         if (error instanceof Error) {
-          if (error.message === 'Операция отменена пользователем') {
-            console.log(chalk.gray('Операция отменена'));
-            console.log('');
+          if (error.message === t("errors.userCancelled")) {
+            console.log(chalk.gray(t("cli.operationCancelled")));
+            console.log("");
             shouldContinue = await ui.askContinue();
           } else {
             ui.showError(error.message);
             shouldContinue = false;
           }
         } else {
-          ui.showError('Неизвестная ошибка');
+          ui.showError(t("errors.unknownError"));
           shouldContinue = false;
         }
       }
@@ -171,16 +168,16 @@ async function main() {
 
     ui.showGoodbye();
   } catch (error) {
-    console.error('');
-    console.error(chalk.red('❌ Критическая ошибка:'));
-    console.error(error instanceof Error ? error.message : 'Неизвестная ошибка');
-    console.error('');
+    console.error("");
+    console.error(chalk.red(t("errors.criticalError")));
+    console.error(error instanceof Error ? error.message : t("errors.unknownError"));
+    console.error("");
     process.exit(1);
   }
 }
 
 // Запуск
 main().catch((error) => {
-  console.error('Необработанная ошибка:', error);
+  console.error(t("errors.unhandledError"), error);
   process.exit(1);
 });

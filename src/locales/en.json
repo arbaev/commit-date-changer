@@ -1,0 +1,92 @@
+{
+  "messages": {
+    "warningTitle": "⚠️  WARNING:",
+    "pushedModeTitle": "Pushed commits modification mode",
+    "pushedChangeWarning": "Modifying pushed commits:",
+    "rewritesHistory": "- Rewrites Git history",
+    "requiresForce": "- Requires force push",
+    "breakOthers": "- May break other developers' work",
+    "causesConflicts": "- May cause conflicts on pull",
+    "useOnlyIf": "Use only if:",
+    "personalBranch": "✓ You are working in a personal branch",
+    "noOthers": "✓ No one else is using this branch",
+    "understandForce": "✓ You understand the consequences of force push",
+    "dangerTitle": "⚠️  DANGER:",
+    "commitAlreadyPushed": "This commit is ALREADY PUSHED",
+    "commit": "Commit:",
+    "pushedTo": "Pushed to:",
+    "modificationRequires": "Modification will REQUIRE:",
+    "forcePushCommand": "git push --force-with-lease",
+    "afterChange": "⚠️  After modification you will need:",
+    "warnTeam": "⚠️  Warn your team about force push!",
+    "important": "⚠️  IMPORTANT:",
+    "commitWasPushed": "Commit was pushed. To synchronize, run:"
+  },
+  "prompts": {
+    "selectCommit": "Select commit to change date:",
+    "enterDate": "Enter new date and time (TAB to edit)",
+    "confirmChanges": "Apply changes? (Y/n)",
+    "confirmPushed": "Continue with pushed commit modification? (type \"yes\" to continue)",
+    "continueWork": "Change another commit?",
+    "lastWarning": "LAST WARNING: Apply changes? (type \"yes\")",
+    "currentDate": "📅 Current date:",
+    "validRange": "   Valid range:",
+    "unpushedSafe": "═══ UNPUSHED",
+    "safeToModify": "(safe to modify)",
+    "pushedDangerous": "═══ PUSHED",
+    "dangerousToModify": "(⚠️  dangerous to modify)",
+    "noUnpushedCommits": "  (no unpushed commits)",
+    "confirmQuestion": "Are you sure you want to continue? (type \"yes\" to continue)"
+  },
+  "validator": {
+    "invalidDate": "Invalid date. Use ISO format: YYYY-MM-DDTHH:mm",
+    "parseError": "Date parsing error. Use ISO format: YYYY-MM-DDTHH:mm",
+    "futureDate": "Date cannot be in the future",
+    "beforePrevious": "Date cannot be earlier than previous commit",
+    "afterNext": "Date cannot be later than next commit",
+    "invalidDateShort": "Invalid date",
+    "outOfRange": "Date is out of valid range",
+    "parsingError": "Date parsing error",
+    "noLimit": "no limit"
+  },
+  "cli": {
+    "notGitRepo": "Current directory is not a Git repository",
+    "uncommittedChanges": "There are uncommitted changes. Commit or stash them before using this tool",
+    "noUnpushedCommits": "No unpushed commits to modify",
+    "useAllowPushed": "Use --allow-pushed to work with pushed commits (dangerous!)",
+    "operationCancelled": "Operation cancelled",
+    "selectedCommit": "✓ Selected commit:",
+    "newDate": "✓ New date:",
+    "changeCancelled": "Change cancelled",
+    "dateUnchanged": "ℹ️  Date unchanged, skipping operation",
+    "goodbye": "👋 Goodbye!",
+    "description": "Interactive CLI tool to safely change Git commit dates"
+  },
+  "success": {
+    "dateChanged": "✨ Commit date successfully changed!"
+  },
+  "errors": {
+    "error": "❌ Error:",
+    "criticalError": "❌ Critical error:",
+    "unknownError": "Unknown error",
+    "noCommits": "No commits available to modify",
+    "userCancelled": "Operation cancelled by user",
+    "unhandledError": "Unhandled error:"
+  },
+  "preview": {
+    "title": "📋 Preview changes:",
+    "commit": "   Commit:",
+    "status": "   Status:",
+    "pushedStatus": "⚠️  PUSHED",
+    "pushedIn": "to",
+    "oldDate": "   Old date:",
+    "newDate": "   New date:",
+    "willChange": "   Will change:",
+    "authorAndCommitter": "Author Date + Committer Date"
+  },
+  "common": {
+    "yes": "yes",
+    "no": "no",
+    "found": "🔍 Found commits:"
+  }
+}

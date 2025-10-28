@@ -1,5 +1,6 @@
-import { isValid, parseISO, isBefore, isAfter } from 'date-fns';
-import { DateRange, ValidationResult } from '../types/index.js';
+import { isValid, parseISO, isBefore, isAfter } from "date-fns";
+import { DateRange, ValidationResult } from "../types/index.js";
+import { t } from "../i18n.js";
 
 /**
  * Валидатор дат для коммитов
@@ -15,7 +16,7 @@ export class DateValidator {
       if (!isValid(date)) {
         return {
           isValid: false,
-          error: 'Невалидная дата. Используйте ISO формат: YYYY-MM-DDTHH:mm',
+          error: t("validator.invalidDate"),
         };
       }
 
@@ -23,7 +24,7 @@ export class DateValidator {
     } catch {
       return {
         isValid: false,
-        error: 'Ошибка парсинга даты. Используйте ISO формат: YYYY-MM-DDTHH:mm',
+        error: t("validator.parseError"),
       };
     }
   }
@@ -36,8 +37,8 @@ export class DateValidator {
     try {
       // Если строка не содержит timezone (Z или +HH:MM), добавляем Z для UTC
       let dateStr = dateString;
-      if (!dateStr.endsWith('Z') && !dateStr.match(/[+-]\d{2}:\d{2}$/)) {
-        dateStr = dateString + 'Z';
+      if (!dateStr.endsWith("Z") && !dateStr.match(/[+-]\d{2}:\d{2}$/)) {
+        dateStr = dateString + "Z";
       }
       const date = parseISO(dateStr);
       return isValid(date) ? date : null;
@@ -49,10 +50,7 @@ export class DateValidator {
   /**
    * Получить допустимый диапазон дат для коммита
    */
-  getValidDateRange(
-    prevCommitDate: Date | null,
-    nextCommitDate: Date | null
-  ): DateRange {
+  getValidDateRange(prevCommitDate: Date | null, nextCommitDate: Date | null): DateRange {
     const now = new Date();
 
     // Максимум = минимум из (текущее время, дата следующего коммита)
@@ -73,7 +71,7 @@ export class DateValidator {
   validateDate(
     newDate: Date,
     prevCommitDate: Date | null,
-    nextCommitDate: Date | null
+    nextCommitDate: Date | null,
   ): ValidationResult {
     const now = new Date();
 
@@ -81,7 +79,7 @@ export class DateValidator {
     if (isAfter(newDate, now)) {
       return {
         isValid: false,
-        error: 'Дата не может быть в будущем',
+        error: t("validator.futureDate"),
       };
     }
 
@@ -89,7 +87,7 @@ export class DateValidator {
     if (prevCommitDate && isBefore(newDate, prevCommitDate)) {
       return {
         isValid: false,
-        error: `Дата не может быть раньше предыдущего коммита (${prevCommitDate.toISOString()})`,
+        error: `${t("validator.beforePrevious")} (${prevCommitDate.toISOString()})`,
       };
     }
 
@@ -97,7 +95,7 @@ export class DateValidator {
     if (nextCommitDate && isAfter(newDate, nextCommitDate)) {
       return {
         isValid: false,
-        error: `Дата не может быть позже следующего коммита (${nextCommitDate.toISOString()})`,
+        error: `${t("validator.afterNext")} (${nextCommitDate.toISOString()})`,
       };
     }
 
@@ -108,16 +106,14 @@ export class DateValidator {
    * Форматировать дату для отображения
    */
   formatDate(date: Date): string {
-    return date.toISOString().replace('.000Z', '').replace('Z', '');
+    return date.toISOString().replace(".000Z", "").replace("Z", "");
   }
 
   /**
    * Форматировать диапазон дат для отображения
    */
   formatDateRange(range: DateRange): string {
-    const minStr = range.min
-      ? this.formatDate(range.min)
-      : 'без ограничений';
+    const minStr = range.min ? this.formatDate(range.min) : t("validator.noLimit");
     const maxStr = this.formatDate(range.max);
 
     return `${minStr} — ${maxStr}`;

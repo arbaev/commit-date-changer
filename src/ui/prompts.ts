@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { Commit, DateRange } from "../types/index.js";
 import { MessageFormatter } from "../core/messages.js";
 import { DateValidator } from "../core/validator.js";
+import { t } from "../i18n.js";
 
 /**
  * UI сервис для интерактивных промптов
@@ -24,7 +25,7 @@ export class UIPrompts {
       {
         type: "input",
         name: "confirm",
-        message: 'Вы уверены, что хотите продолжить? (введите "yes" для продолжения)',
+        message: t("prompts.confirmQuestion"),
         default: "no",
       },
     ]);
@@ -37,7 +38,7 @@ export class UIPrompts {
    */
   async selectCommit(commits: Commit[], allowPushed: boolean): Promise<Commit> {
     if (commits.length === 0) {
-      throw new Error("Нет доступных коммитов для изменения");
+      throw new Error(t("errors.noCommits"));
     }
 
     // Группировка коммитов
@@ -48,14 +49,14 @@ export class UIPrompts {
     let header = "";
     if (allowPushed && pushed.length > 0) {
       header = `
-${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изменять) ${chalk.green("═══")}
+${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.green("═══")}
 `;
       if (unpushed.length === 0) {
-        header += chalk.gray("  (нет незапушенных коммитов)\n");
+        header += chalk.gray(t("prompts.noUnpushedCommits") + "\n");
       }
     }
 
-    console.log(chalk.yellow("🔍 Найдено коммитов:"), commits.length);
+    console.log(chalk.yellow(t("common.found")), commits.length);
     console.log(header);
 
     // Формирование choices
@@ -75,7 +76,11 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
         unpushedCount + 1,
         0,
         new inquirer.Separator(
-          chalk.red("═══ ЗАПУШЕННЫЕ") + chalk.yellow(" (⚠️  опасно изменять)") + chalk.red(" ═══"),
+          chalk.red(t("prompts.pushedDangerous")) +
+            " " +
+            chalk.yellow(t("prompts.dangerousToModify")) +
+            " " +
+            chalk.red("═══"),
         ),
       );
     }
@@ -84,7 +89,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
       {
         type: "list",
         name: "commit",
-        message: "Выберите коммит для изменения даты:",
+        message: t("prompts.selectCommit"),
         choices,
         pageSize: 15,
       },
@@ -96,7 +101,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     if (selectedCommit.isPushed) {
       const confirmed = await this.confirmPushedCommit(selectedCommit);
       if (!confirmed) {
-        throw new Error("Операция отменена пользователем");
+        throw new Error(t("errors.userCancelled"));
       }
     }
 
@@ -113,7 +118,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
       {
         type: "input",
         name: "confirm",
-        message: 'Продолжить изменение запушенного коммита? (введите "yes" для продолжения)',
+        message: t("prompts.confirmPushed"),
         default: "no",
       },
     ]);
@@ -129,15 +134,15 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     const formattedRange = this.validator.formatDateRange(validRange);
 
     console.log("");
-    console.log(chalk.yellow("📅 Текущая дата:"), formattedCurrent);
-    console.log(chalk.green("   Допустимый диапазон:"), formattedRange);
+    console.log(chalk.yellow(t("prompts.currentDate")), formattedCurrent);
+    console.log(chalk.green(t("prompts.validRange")), formattedRange);
     console.log("");
 
     // Форматируем текущую дату для предзаполнения (без секунд)
     const initialDate = currentDate.toISOString().substring(0, 16);
 
     const answer = await input({
-      message: "Введите новую дату и время (TAB для редактирования)",
+      message: t("prompts.enterDate"),
       default: initialDate,
       validate: (value: string) => {
         // Если пользователь оставил текущее значение без изменений
@@ -148,13 +153,13 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
         // Валидация формата
         const formatValidation = this.validator.validateISOFormat(value);
         if (!formatValidation.isValid) {
-          return formatValidation.error || "Невалидная дата";
+          return formatValidation.error || t("validator.invalidDateShort");
         }
 
         // Парсинг и валидация диапазона
         const parsedDate = this.validator.parseDate(value);
         if (!parsedDate) {
-          return "Ошибка парсинга даты";
+          return t("validator.parsingError");
         }
 
         const rangeValidation = this.validator.validateDate(
@@ -164,7 +169,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
         );
 
         if (!rangeValidation.isValid) {
-          return rangeValidation.error || "Дата вне допустимого диапазона";
+          return rangeValidation.error || t("validator.outOfRange");
         }
 
         return true;
@@ -178,7 +183,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
 
     const newDate = this.validator.parseDate(answer);
     if (!newDate) {
-      throw new Error("Ошибка парсинга даты");
+      throw new Error(t("validator.parsingError"));
     }
 
     return newDate;
@@ -192,20 +197,20 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     const formattedNew = this.validator.formatDate(newDate);
 
     console.log("");
-    console.log(chalk.yellow("📋 Превью изменений:"));
-    console.log("   Коммит:      ", chalk.cyan(commit.hash), `"${commit.message}"`);
+    console.log(chalk.yellow(t("preview.title")));
+    console.log(t("preview.commit"), chalk.cyan(commit.hash), `"${commit.message}"`);
 
     if (commit.isPushed) {
       console.log(
-        "   Статус:      ",
-        chalk.yellow("⚠️  ЗАПУШЕН"),
-        chalk.gray(`в ${commit.remotes.join(", ")}`),
+        t("preview.status"),
+        chalk.yellow(t("preview.pushedStatus")),
+        chalk.gray(`${t("preview.pushedIn")} ${commit.remotes.join(", ")}`),
       );
     }
 
-    console.log("   Старая дата: ", formattedOld);
-    console.log("   Новая дата:  ", chalk.green(formattedNew));
-    console.log("   Изменяются:  ", chalk.gray("Author Date + Committer Date"));
+    console.log(t("preview.oldDate"), formattedOld);
+    console.log(t("preview.newDate"), chalk.green(formattedNew));
+    console.log(t("preview.willChange"), chalk.gray(t("preview.authorAndCommitter")));
 
     if (commit.isPushed) {
       console.log(this.messageFormatter.getFinalWarning(commit));
@@ -217,9 +222,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
       {
         type: "input",
         name: "confirm",
-        message: commit.isPushed
-          ? 'ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ: Применить изменения? (введите "yes")'
-          : "Применить изменения? (Y/n)",
+        message: commit.isPushed ? t("prompts.lastWarning") : t("prompts.confirmChanges"),
         default: commit.isPushed ? "no" : "y",
       },
     ]);
@@ -239,7 +242,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
       {
         type: "confirm",
         name: "continue",
-        message: "Изменить еще один коммит?",
+        message: t("prompts.continueWork"),
         default: false,
       },
     ]);
@@ -252,7 +255,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
    */
   showSuccess(commit: Commit): void {
     console.log("");
-    console.log(chalk.green("✨ Дата коммита успешно изменена!"));
+    console.log(chalk.green(t("success.dateChanged")));
 
     if (commit.isPushed) {
       console.log(this.messageFormatter.showPostChangeInstructions(commit));
@@ -266,7 +269,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
    */
   showError(message: string): void {
     console.error("");
-    console.error(chalk.red("❌ Ошибка:"), message);
+    console.error(chalk.red(t("errors.error")), message);
     console.error("");
   }
 
@@ -274,6 +277,6 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
    * Показать прощание
    */
   showGoodbye(): void {
-    console.log(chalk.yellow("👋 Пока!"));
+    console.log(chalk.yellow(t("cli.goodbye")));
   }
 }
