@@ -1,135 +1,208 @@
 # commit-date-changer
 
-Интерактивная CLI утилита для безопасного изменения дат Git коммитов.
+An interactive CLI tool for safely changing Git commit dates with built-in validation and multi-language support.
 
-## Особенности
+## Features
 
-- 🔒 **Безопасность**: По умолчанию работает только с незапушенными коммитами
-- ⚠️ **Предупреждения**: Множественные уровни защиты при работе с запушенными коммитами
-- ✅ **Валидация**: Автоматическая проверка хронологического порядка коммитов
-- 🎨 **Интерактивный UI**: Удобный интерфейс с цветным выводом
-- 🔄 **Цикличная работа**: Изменяйте несколько коммитов за один сеанс
-- 📅 **ISO формат**: Простой и однозначный формат даты (YYYY-MM-DDTHH:mm)
+- 🔒 **Safe by default** - Works with unpushed commits by default
+- 💻 **Two modes** - Interactive UI or CLI mode for automation
+- ⚠️ **Safety warnings** - Multiple protection layers when working with pushed commits
+- ✅ **Smart validation** - Automatic chronological order checking
+- 🎨 **Interactive UI** - User-friendly interface with colored output
+- 🌍 **Multilingual** - Support for English and Russian
+- 🔄 **Batch processing** - Change multiple commits in one session
+- 📅 **ISO format** - Simple and unambiguous date format (YYYY-MM-DDTHH:mm)
+- 📊 **JSON output** - Structured output for automation and scripting
 
-## Установка
+## Installation
 
 ```bash
 npm install -g commit-date-changer
 ```
 
-Или локально в проекте:
+Or locally in your project:
 
 ```bash
 npm install --save-dev commit-date-changer
 ```
 
-## Использование
+## Usage
 
-### Базовое использование (безопасный режим)
+### Interactive Mode (Default)
+
+Simply run the command and follow the prompts:
 
 ```bash
 commit-date
 ```
 
-Покажет только незапушенные коммиты для изменения.
+The tool will:
 
-### Работа с запушенными коммитами (⚠️ опасно)
+1. Show you a list of commits (unpushed only by default)
+2. Let you select a commit to modify
+3. Show the current date and valid date range
+4. Ask for a new date with validation
+5. Preview changes before applying
+6. Allow you to modify more commits in the same session
+
+**Options for interactive mode:**
 
 ```bash
-commit-date --allow-pushed
+commit-date --count 20              # Show more commits (default: 10)
+commit-date --allow-pushed          # Include pushed commits (⚠️ dangerous)
 ```
 
-Позволяет изменять запушенные коммиты с множественными предупреждениями.
+### CLI Mode (For Automation)
 
-### Опции
+Change commit dates directly from the command line:
 
 ```bash
-commit-date --count 20              # Показать больше коммитов
-commit-date --help                  # Справка
-commit-date --version               # Версия
+# Basic usage
+commit-date --hash abc1234 --date "2025-10-28T18:30"
+
+# With JSON output for scripts
+commit-date --hash abc1234 --date "2025-10-28T18:30" --json
+
+# Modify pushed commit and skip confirmation
+commit-date --hash abc1234 --date "2025-10-28T18:30" --allow-pushed --no-confirm
 ```
 
-## Пример работы
+**CLI flags:**
+
+- `--hash <hash>` - Short or full commit hash
+- `--date <iso-date>` - New date in ISO 8601 format (YYYY-MM-DDTHH:mm or full ISO string)
+- `--allow-pushed` - Allow working with pushed commits (⚠️ dangerous)
+- `--no-confirm` - Skip confirmations for pushed commits
+- `--json` - Output result in JSON format
+
+**JSON output example:**
+
+```json
+{
+  "success": true,
+  "commit": {
+    "hash": "abc1234",
+    "message": "Add user authentication",
+    "oldDate": "2024-01-01T10:30:00",
+    "newDate": "2024-01-01T08:00:00"
+  }
+}
+```
+
+### Other Options
+
+```bash
+commit-date --help                  # Show help
+commit-date --version               # Show version
+```
+
+## Example: Interactive Mode
 
 ```
-🔍 Найдено коммитов: 3
+🔍 Found 3 commits
 
   1. a1b2c3d (2024-01-01 10:30) Add user authentication
   2. d4e5f6g (2024-01-01 14:20) Fix login bug
   3. g7h8i9j (2024-01-02 09:15) Update README
 
-? Выберите коммит для изменения даты: 1
+? Select commit to change date: 1
 
-✓ Выбран коммит: a1b2c3d
+✓ Selected commit: a1b2c3d
 
-📅 Текущая дата: 2024-01-01T10:30:00
-   Допустимый диапазон: без ограничений — 2024-01-01T14:19:59
+📅 Current date: 2024-01-01T10:30:00
+   Valid range: no limit — 2024-01-01T14:19:59
 
-? Введите новую дату и время (ISO формат: YYYY-MM-DDTHH:mm): 2024-01-01T08:00
+? Enter new date and time (ISO format: YYYY-MM-DDTHH:mm): 2024-01-01T08:00
 
-✓ Новая дата: 2024-01-01T08:00:00
+✓ New date: 2024-01-01T08:00:00
 
-📋 Превью изменений:
-   Коммит:       a1b2c3d "Add user authentication"
-   Старая дата:  2024-01-01T10:30:00
-   Новая дата:   2024-01-01T08:00:00
-   Изменяются:   Author Date + Committer Date
+📋 Preview of changes:
+   Commit:       a1b2c3d "Add user authentication"
+   Old date:     2024-01-01T10:30:00
+   New date:     2024-01-01T08:00:00
+   Changing:     Author Date + Committer Date
 
-? Применить изменения? (Y/n) y
+? Apply changes? (Y/n) y
 
-✨ Дата коммита успешно изменена!
+✨ Commit date successfully changed!
 
-? Изменить еще один коммит? (y/N) n
+? Change another commit? (y/N) n
 
-👋 Готово!
+👋 Done!
 ```
 
-## Требования
-
-- Node.js >= 18.0.0
-- Git репозиторий
-- Чистое рабочее дерево (нет uncommitted изменений)
-
-## Безопасность
-
-### Безопасный режим (по умолчанию)
-
-- Работает только с незапушенными коммитами
-- Не требует force push
-- Безопасно для команды
-
-### Режим --allow-pushed (опасно!)
-
-Используйте только если:
-- ✅ Вы работаете в personal ветке
-- ✅ Никто другой не использует эту ветку
-- ✅ Вы понимаете последствия force push
-
-Изменение запушенных коммитов:
-- ⚠️ Перезаписывает историю Git
-- ⚠️ Требует `git push --force-with-lease`
-- ⚠️ Может сломать работу других разработчиков
-
-## Разработка
+## Example: CLI Mode
 
 ```bash
-# Установка зависимостей
+# Change a local commit
+$ commit-date --hash a1b2c3d --date "2024-01-01T08:00"
+✨ Commit date successfully changed!
+
+# Get JSON output
+$ commit-date --hash a1b2c3d --date "2024-01-01T08:00" --json
+{"success":true,"commit":{"hash":"a1b2c3d","message":"Add user authentication","oldDate":"2024-01-01T10:30:00","newDate":"2024-01-01T08:00:00"}}
+
+# Change pushed commit (dangerous!)
+$ commit-date --hash d4e5f6g --date "2024-01-01T15:00" --allow-pushed --no-confirm
+✨ Commit date successfully changed!
+⚠️  This commit was pushed. You need to force push: git push --force-with-lease
+```
+
+## Requirements
+
+- Node.js >= 18.0.0
+- Git repository
+- Clean working tree (no uncommitted changes)
+
+## Safety
+
+### Safe Mode (Default)
+
+By default, the tool:
+
+- Works only with unpushed commits
+- Doesn't require force push
+- Is safe for team collaboration
+
+### --allow-pushed Mode (⚠️ Dangerous!)
+
+Use only if:
+
+- ✅ You're working in a personal branch
+- ✅ Nobody else is using this branch
+- ✅ You understand the consequences of force push
+
+Modifying pushed commits:
+
+- ⚠️ Rewrites Git history
+- ⚠️ Requires `git push --force-with-lease`
+- ⚠️ Can break other developers' work
+
+**The tool will show multiple warnings and ask for confirmation before proceeding!**
+
+## Development
+
+```bash
+# Install dependencies
 npm install
 
-# Разработка
+# Development mode
 npm run dev
 
-# Сборка
+# Build
 npm run build
 
-# Форматирование
+# Run tests
+npm test
+
+# Format code
 npm run format
 ```
 
-## Лицензия
+## License
 
 MIT
 
-## Автор
+## Author
 
 Timur Arbaev
