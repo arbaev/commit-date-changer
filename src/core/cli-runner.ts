@@ -5,7 +5,7 @@ import { Commit } from "../types/index.js";
 import { t } from "../i18n.js";
 
 /**
- * Опции для режима командной строки
+ * Options for CLI mode
  */
 export interface CliModeOptions {
   hash: string;
@@ -16,7 +16,7 @@ export interface CliModeOptions {
 }
 
 /**
- * Результат выполнения операции в режиме командной строки
+ * Result of CLI mode operation
  */
 export interface CliModeResult {
   success: boolean;
@@ -32,7 +32,7 @@ export interface CliModeResult {
 }
 
 /**
- * Сервис для выполнения операций в режиме командной строки
+ * Service for executing operations in CLI mode
  */
 export class CliRunner {
   constructor(
@@ -42,7 +42,7 @@ export class CliRunner {
   ) {}
 
   /**
-   * Найти коммит по hash
+   * Find commit by hash
    */
   async findCommitByHash(hash: string, allowPushed: boolean): Promise<Commit | null> {
     const commits = allowPushed
@@ -56,10 +56,10 @@ export class CliRunner {
   }
 
   /**
-   * Валидация входных параметров
+   * Validate input parameters
    */
   validateInputs(options: CliModeOptions): CliModeResult | null {
-    // Проверка формата даты
+    // Check date format
     const formatValidation = this.validator.validateISOFormat(options.date);
     if (!formatValidation.isValid) {
       return {
@@ -69,21 +69,21 @@ export class CliRunner {
       };
     }
 
-    return null; // Все ок
+    return null; // All OK
   }
 
   /**
-   * Выполнить изменение даты
+   * Execute date change
    */
   async execute(options: CliModeOptions): Promise<CliModeResult> {
     try {
-      // Валидация входных данных
+      // Validate input data
       const validationError = this.validateInputs(options);
       if (validationError) {
         return validationError;
       }
 
-      // Поиск коммита
+      // Find commit
       const commit = await this.findCommitByHash(options.hash, options.allowPushed);
       if (!commit) {
         return {
@@ -93,7 +93,7 @@ export class CliRunner {
         };
       }
 
-      // Проверка pushed статуса
+      // Check pushed status
       if (commit.isPushed && !options.noConfirm) {
         return {
           success: false,
@@ -105,7 +105,7 @@ export class CliRunner {
         };
       }
 
-      // Парсинг новой даты
+      // Parse new date
       const newDate = this.validator.parseDate(options.date);
       if (!newDate) {
         return {
@@ -115,7 +115,7 @@ export class CliRunner {
         };
       }
 
-      // Определение допустимого диапазона
+      // Determine valid range
       const allCommits = options.allowPushed
         ? await this.gitService.getAllCommits(100)
         : await this.gitService.getUnpushedCommits(100);
@@ -127,7 +127,7 @@ export class CliRunner {
       const prevDate = prevCommit ? prevCommit.authorDate : null;
       const nextDate = nextCommit ? nextCommit.authorDate : null;
 
-      // Валидация диапазона дат
+      // Validate date range
       const rangeValidation = this.validator.validateDate(newDate, prevDate, nextDate);
       if (!rangeValidation.isValid) {
         return {
@@ -137,10 +137,10 @@ export class CliRunner {
         };
       }
 
-      // Применение изменений
+      // Apply changes
       await this.dateChanger.validateAndChange(commit, newDate, prevDate, nextDate);
 
-      // Успех
+      // Success
       return {
         success: true,
         commit: {
@@ -161,7 +161,7 @@ export class CliRunner {
   }
 
   /**
-   * Форматировать вывод
+   * Format output
    */
   formatOutput(result: CliModeResult, asJson: boolean): string {
     if (asJson) {

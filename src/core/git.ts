@@ -2,7 +2,7 @@ import simpleGit, { SimpleGit, DefaultLogFields, ListLogLine } from 'simple-git'
 import { Commit } from '../types/index.js';
 
 /**
- * Сервис для работы с Git репозиторием
+ * Service for working with Git repository
  */
 export class GitService {
   private git: SimpleGit;
@@ -12,7 +12,7 @@ export class GitService {
   }
 
   /**
-   * Проверить, находимся ли в Git репозитории
+   * Check if we are in a Git repository
    */
   async isGitRepository(): Promise<boolean> {
     try {
@@ -24,7 +24,7 @@ export class GitService {
   }
 
   /**
-   * Проверить, есть ли uncommitted изменения
+   * Check if there are uncommitted changes
    */
   async hasUncommittedChanges(): Promise<boolean> {
     const status = await this.git.status();
@@ -32,7 +32,7 @@ export class GitService {
   }
 
   /**
-   * Получить текущую ветку
+   * Get current branch
    */
   async getCurrentBranch(): Promise<string> {
     const branch = await this.git.revparse(['--abbrev-ref', 'HEAD']);
@@ -40,7 +40,7 @@ export class GitService {
   }
 
   /**
-   * Получить remote tracking branch
+   * Get remote tracking branch
    */
   async getRemoteTrackingBranch(): Promise<string | null> {
     try {
@@ -53,11 +53,11 @@ export class GitService {
   }
 
   /**
-   * Проверить, запушен ли коммит
+   * Check if commit is pushed
    */
   async isCommitPushed(commitHash: string): Promise<boolean> {
     try {
-      // Получаем все remote ветки, содержащие этот коммит
+      // Get all remote branches containing this commit
       const result = await this.git.raw(['branch', '-r', '--contains', commitHash]);
       return result.trim().length > 0;
     } catch {
@@ -66,7 +66,7 @@ export class GitService {
   }
 
   /**
-   * Получить список remote веток, содержащих коммит
+   * Get list of remote branches containing commit
    */
   async getCommitRemotes(commitHash: string): Promise<string[]> {
     try {
@@ -85,17 +85,17 @@ export class GitService {
   }
 
   /**
-   * Получить список незапушенных коммитов
+   * Get list of unpushed commits
    */
   async getUnpushedCommits(limit: number = 10): Promise<Commit[]> {
     const remoteBranch = await this.getRemoteTrackingBranch();
 
     let logOptions: string[];
     if (remoteBranch) {
-      // Коммиты между remote и HEAD
+      // Commits between remote and HEAD
       logOptions = [`${remoteBranch}..HEAD`, `-n${limit}`];
     } else {
-      // Если нет remote, показываем последние коммиты
+      // If no remote, show latest commits
       logOptions = [`-n${limit}`];
     }
 
@@ -113,7 +113,7 @@ export class GitService {
   }
 
   /**
-   * Получить все коммиты текущей ветки
+   * Get all commits from current branch
    */
   async getAllCommits(limit: number = 20): Promise<Commit[]> {
     const log = await this.git.log([`-n${limit}`]);
@@ -128,7 +128,7 @@ export class GitService {
   }
 
   /**
-   * Парсинг коммита из git log
+   * Parse commit from git log
    */
   private async parseCommit(
     entry: DefaultLogFields & ListLogLine
@@ -141,7 +141,7 @@ export class GitService {
       fullHash: entry.hash,
       message: entry.message,
       authorDate: new Date(entry.date),
-      committerDate: new Date(entry.date), // simple-git использует author date
+      committerDate: new Date(entry.date), // simple-git uses author date
       author: entry.author_name,
       isPushed,
       remotes,
@@ -149,18 +149,18 @@ export class GitService {
   }
 
   /**
-   * Изменить дату коммита через git filter-branch
-   * Изменяет ОБЕ даты: author date и committer date
+   * Change commit date using git filter-branch
+   * Changes BOTH dates: author date and committer date
    *
-   * ВАЖНО: Это изменяет хеши всех коммитов после измененного!
+   * IMPORTANT: This changes hashes of all commits after the modified one!
    */
   async changeCommitDate(commitHash: string, newDate: Date): Promise<void> {
-    // Форматируем дату в ISO формате без преобразования timezone
-    // Используем toISOString() который возвращает UTC время
+    // Format date in ISO format without timezone conversion
+    // Use toISOString() which returns UTC time
     const formattedDate = newDate.toISOString();
 
-    // Используем git filter-branch для изменения даты конкретного коммита
-    // Это изменит хеш этого коммита и всех последующих
+    // Use git filter-branch to change date of specific commit
+    // This will change hash of this commit and all subsequent ones
     const script = `
 if [ "$GIT_COMMIT" = "${commitHash}" ]; then
   export GIT_AUTHOR_DATE="${formattedDate}"
@@ -177,7 +177,7 @@ fi
       '--all',
     ]);
 
-    // Очистка резервных копий
+    // Clean up backup refs
     await this.git.raw(['for-each-ref', '--format=%(refname)', 'refs/original/'])
       .then(async (refs) => {
         if (refs.trim()) {
@@ -188,12 +188,12 @@ fi
         }
       })
       .catch(() => {
-        // Игнорируем ошибки, если нет резервных копий
+        // Ignore errors if no backup refs exist
       });
   }
 
   /**
-   * Получить коммит по hash
+   * Get commit by hash
    */
   async getCommit(commitHash: string): Promise<Commit | null> {
     try {

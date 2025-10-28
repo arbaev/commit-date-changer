@@ -7,7 +7,7 @@ import { DateValidator } from "../core/validator.js";
 import { t } from "../i18n.js";
 
 /**
- * UI сервис для интерактивных промптов
+ * UI service for interactive prompts
  */
 export class UIPrompts {
   constructor(
@@ -16,7 +16,7 @@ export class UIPrompts {
   ) {}
 
   /**
-   * Показать начальное предупреждение для режима --allow-pushed
+   * Show initial warning for --allow-pushed mode
    */
   async confirmPushedMode(): Promise<boolean> {
     console.log(this.messageFormatter.getInitialWarning());
@@ -34,18 +34,18 @@ export class UIPrompts {
   }
 
   /**
-   * Отобразить список коммитов и дать выбрать
+   * Display list of commits and allow selection
    */
   async selectCommit(commits: Commit[], allowPushed: boolean): Promise<Commit> {
     if (commits.length === 0) {
       throw new Error(t("errors.noCommits"));
     }
 
-    // Группировка коммитов
+    // Group commits
     const unpushed = commits.filter((c) => !c.isPushed);
     const pushed = commits.filter((c) => c.isPushed);
 
-    // Формирование заголовка
+    // Format header
     let header = "";
     if (allowPushed && pushed.length > 0) {
       header = `
@@ -59,7 +59,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
     console.log(chalk.yellow(t("common.found")), commits.length);
     console.log(header);
 
-    // Формирование choices
+    // Format choices
     type ChoiceItem = { name: string; value: Commit; short: string } | inquirer.Separator;
 
     const choices: ChoiceItem[] = commits.map((commit, index) => ({
@@ -68,7 +68,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
       short: commit.hash,
     }));
 
-    // Разделитель между незапушенными и запушенными
+    // Separator between unpushed and pushed
     if (allowPushed && pushed.length > 0 && unpushed.length > 0) {
       const unpushedCount = unpushed.length;
       choices.splice(unpushedCount, 0, new inquirer.Separator());
@@ -97,7 +97,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
 
     const selectedCommit = answer.commit;
 
-    // Если выбран запушенный коммит, показать предупреждение
+    // If pushed commit is selected, show warning
     if (selectedCommit.isPushed) {
       const confirmed = await this.confirmPushedCommit(selectedCommit);
       if (!confirmed) {
@@ -109,7 +109,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
   }
 
   /**
-   * Подтверждение изменения запушенного коммита
+   * Confirm modification of pushed commit
    */
   async confirmPushedCommit(commit: Commit): Promise<boolean> {
     console.log(this.messageFormatter.getCommitWarning(commit));
@@ -127,7 +127,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
   }
 
   /**
-   * Запросить новую дату в ISO формате
+   * Request new date in ISO format
    */
   async promptNewDate(currentDate: Date, validRange: DateRange): Promise<Date> {
     const formattedCurrent = this.validator.formatDate(currentDate);
@@ -138,25 +138,25 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
     console.log(chalk.green(t("prompts.validRange")), formattedRange);
     console.log("");
 
-    // Форматируем текущую дату для предзаполнения (без секунд)
+    // Format current date for pre-fill (without seconds)
     const initialDate = currentDate.toISOString().substring(0, 16);
 
     const answer = await input({
       message: t("prompts.enterDate"),
       default: initialDate,
       validate: (value: string) => {
-        // Если пользователь оставил текущее значение без изменений
+        // If user left current value unchanged
         if (!value || value.trim() === "") {
-          return true; // Валидация прошла
+          return true; // Validation passed
         }
 
-        // Валидация формата
+        // Format validation
         const formatValidation = this.validator.validateISOFormat(value);
         if (!formatValidation.isValid) {
           return formatValidation.error || t("validator.invalidDateShort");
         }
 
-        // Парсинг и валидация диапазона
+        // Parse and validate range
         const parsedDate = this.validator.parseDate(value);
         if (!parsedDate) {
           return t("validator.parsingError");
@@ -176,7 +176,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
       },
     });
 
-    // Если пользователь оставил поле пустым, используем текущую дату
+    // If user left field empty, use current date
     if (!answer || answer.trim() === "") {
       return currentDate;
     }
@@ -190,7 +190,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
   }
 
   /**
-   * Показать превью изменений и запросить подтверждение
+   * Show preview of changes and request confirmation
    */
   async confirmChanges(commit: Commit, newDate: Date): Promise<boolean> {
     const formattedOld = this.validator.formatDate(commit.authorDate);
@@ -235,7 +235,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
   }
 
   /**
-   * Спросить, продолжить работу или выйти
+   * Ask to continue work or exit
    */
   async askContinue(): Promise<boolean> {
     const answer = await inquirer.prompt([
@@ -251,7 +251,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
   }
 
   /**
-   * Показать сообщение об успехе
+   * Show success message
    */
   showSuccess(commit: Commit): void {
     console.log("");
@@ -265,7 +265,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
   }
 
   /**
-   * Показать сообщение об ошибке
+   * Show error message
    */
   showError(message: string): void {
     console.error("");
@@ -274,7 +274,7 @@ ${chalk.green(t("prompts.unpushedSafe"))} ${t("prompts.safeToModify")} ${chalk.g
   }
 
   /**
-   * Показать прощание
+   * Show goodbye message
    */
   showGoodbye(): void {
     console.log(chalk.yellow(t("cli.goodbye")));

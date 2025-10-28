@@ -3,18 +3,18 @@ import { Commit } from "../types/index.js";
 import { t } from "../i18n.js";
 
 /**
- * Сервис для форматирования сообщений и предупреждений
+ * Service for formatting messages and warnings
  */
 export class MessageFormatter {
   /**
-   * Проверить, требуется ли режим с запушенными коммитами
+   * Check if pushed commits mode is required
    */
   requiresPushedMode(commit: Commit): boolean {
     return commit.isPushed;
   }
 
   /**
-   * Получить текст предупреждения при запуске с --allow-pushed
+   * Get warning text when running with --allow-pushed
    */
   getInitialWarning(): string {
     return `
@@ -34,7 +34,7 @@ ${chalk.green("✓")} ${t("messages.understandForce")}
   }
 
   /**
-   * Получить предупреждение при выборе запушенного коммита
+   * Get warning when selecting pushed commit
    */
   getCommitWarning(commit: Commit): string {
     const remotesStr = commit.remotes.join(", ");
@@ -51,7 +51,7 @@ ${chalk.yellow("•")} ${t("messages.forcePushCommand")}
   }
 
   /**
-   * Получить финальное предупреждение перед применением
+   * Get final warning before applying changes
    */
   getFinalWarning(commit: Commit): string {
     return `
@@ -61,7 +61,7 @@ ${chalk.yellow(t("messages.afterChange"))}
   }
 
   /**
-   * Показать инструкции после успешного изменения запушенного коммита
+   * Show instructions after successful change of pushed commit
    */
   showPostChangeInstructions(commit: Commit): string {
     const remote = commit.remotes[0] || "origin <branch>";
@@ -76,7 +76,7 @@ ${chalk.yellow(t("messages.warnTeam"))}
   }
 
   /**
-   * Получить команду для force push
+   * Get force push command
    */
   getForcePushCommand(commit: Commit): string {
     const remote = commit.remotes[0] || "origin";
@@ -84,7 +84,7 @@ ${chalk.yellow(t("messages.warnTeam"))}
   }
 
   /**
-   * Форматировать имя коммита с маркером (для запушенных)
+   * Format commit name with marker (for pushed commits)
    */
   formatCommitName(commit: Commit): string {
     const marker = commit.isPushed ? chalk.yellow("⚠️  ") : "";

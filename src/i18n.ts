@@ -7,32 +7,32 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
- * Определить язык системы из переменных окружения
+ * Detect system language from environment variables
  */
 export function detectSystemLanguage(): string {
-  // Приоритет:
-  // 1. process.env.LANGUAGE (может быть список, берем первый)
+  // Priority:
+  // 1. process.env.LANGUAGE (can be a list, take first)
   // 2. process.env.LANG
   // 3. process.env.LC_ALL
   const envLang =
     process.env.LANGUAGE?.split(":")[0] || process.env.LANG || process.env.LC_ALL || "en";
 
-  // Парсим локаль типа ru_RU.UTF-8 -> ru
+  // Parse locale like ru_RU.UTF-8 -> ru
   const langCode = envLang.split(".")[0].split("_")[0].toLowerCase();
 
-  // Поддерживаемые языки
+  // Supported languages
   const supportedLanguages = ["en", "ru"];
 
   return supportedLanguages.includes(langCode) ? langCode : "en";
 }
 
 /**
- * Инициализировать i18next с выбранным языком
+ * Initialize i18next with selected language
  */
 export async function initI18n(forceLang?: string): Promise<void> {
   const language = forceLang || detectSystemLanguage();
 
-  // Загрузка переводов
+  // Load translations
   const enTranslation = JSON.parse(readFileSync(join(__dirname, "locales", "en.json"), "utf-8"));
   const ruTranslation = JSON.parse(readFileSync(join(__dirname, "locales", "ru.json"), "utf-8"));
 
@@ -47,7 +47,7 @@ export async function initI18n(forceLang?: string): Promise<void> {
 }
 
 /**
- * Получить функцию перевода (shorthand)
+ * Get translation function (shorthand)
  */
 export function t(key: string, params?: Record<string, string>): string {
   return i18next.t(key, params);

@@ -3,7 +3,7 @@ import { DateValidator } from './validator.js';
 import { Commit } from '../types/index.js';
 
 /**
- * Сервис для изменения дат коммитов
+ * Service for changing commit dates
  */
 export class DateChanger {
   constructor(
@@ -12,20 +12,20 @@ export class DateChanger {
   ) {}
 
   /**
-   * Изменить дату коммита (обе даты: author + committer)
+   * Change commit date (both dates: author + committer)
    */
   async changeCommitDate(commit: Commit, newDate: Date): Promise<void> {
     try {
       await this.gitService.changeCommitDate(commit.fullHash, newDate);
     } catch (error) {
       throw new Error(
-        `Ошибка при изменении даты коммита: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`
+        `Error changing commit date: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }
 
   /**
-   * Валидировать и изменить дату коммита
+   * Validate and change commit date
    */
   async validateAndChange(
     commit: Commit,
@@ -33,7 +33,7 @@ export class DateChanger {
     prevCommitDate: Date | null,
     nextCommitDate: Date | null
   ): Promise<void> {
-    // Валидация даты
+    // Validate date
     const validation = this.validator.validateDate(
       newDate,
       prevCommitDate,
@@ -44,7 +44,7 @@ export class DateChanger {
       throw new Error(validation.error);
     }
 
-    // Изменение даты
+    // Change date
     await this.changeCommitDate(commit, newDate);
   }
 }

@@ -14,7 +14,7 @@ import { CliRunner } from "./core/cli-runner.js";
 import { Commit } from "./types/index.js";
 import { initI18n, t } from "./i18n.js";
 
-// Получение версии из package.json
+// Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
@@ -29,7 +29,7 @@ program
   .option("--allow-pushed", "Allow modification of pushed commits")
   .option("--all", "Alias for --allow-pushed")
   .option("--count <number>", "Number of commits to display", "10")
-  // Режим командной строки
+  // CLI mode
   .option("--hash <hash>", "Commit hash to change (CLI mode)")
   .option("-d, --date <date>", "New date in ISO 8601 format (CLI mode)")
   .option("--no-confirm", "Skip all confirmations (USE WITH CAUTION)")
@@ -39,28 +39,28 @@ program
 const options = program.opts();
 
 /**
- * Основная функция CLI
+ * Main CLI function
  */
 async function main() {
   try {
-    // Инициализация i18n
+    // Initialize i18n
     await initI18n(options.lang);
 
-    // Инициализация сервисов
+    // Initialize services
     const gitService = new GitService();
     const validator = new DateValidator();
     const dateChanger = new DateChanger(gitService, validator);
     const messageFormatter = new MessageFormatter();
     const ui = new UIPrompts(messageFormatter, validator);
 
-    // Проверка Git репозитория
+    // Check Git repository
     const isGitRepo = await gitService.isGitRepository();
     if (!isGitRepo) {
       ui.showError(t("cli.notGitRepo"));
       process.exit(1);
     }
 
-    // Проверка uncommitted изменений
+    // Check uncommitted changes
     const hasUncommitted = await gitService.hasUncommittedChanges();
     if (hasUncommitted) {
       if (options.json) {
@@ -77,13 +77,13 @@ async function main() {
       process.exit(1);
     }
 
-    // РЕЖИМ КОМАНДНОЙ СТРОКИ
+    // CLI MODE
     if (options.hash && options.date) {
       const runner = new CliRunner(gitService, validator, dateChanger);
       const result = await runner.execute({
         hash: options.hash,
         date: options.date,
-        noConfirm: options.confirm === false, // commander преобразует --no-confirm в confirm: false
+        noConfirm: options.confirm === false, // commander converts --no-confirm to confirm: false
         json: options.json || false,
         allowPushed: options.allowPushed || options.all || false,
       });
@@ -93,7 +93,7 @@ async function main() {
       process.exit(result.success ? 0 : 1);
     }
 
-    // Проверка: если указан только один из флагов - ошибка
+    // Check: if only one flag is specified - error
     if (options.hash || options.date) {
       const error = "Both --hash and --date are required for CLI mode";
       if (options.json) {
@@ -110,7 +110,7 @@ async function main() {
       process.exit(1);
     }
 
-    // Режим с запушенными коммитами
+    // Mode with pushed commits
     const allowPushed = options.allowPushed || options.all;
 
     if (allowPushed) {
@@ -121,7 +121,7 @@ async function main() {
       }
     }
 
-    // Получение коммитов
+    // Get commits
     const count = parseInt(options.count, 10);
     let commits: Commit[];
 
@@ -138,18 +138,18 @@ async function main() {
       }
     }
 
-    // Интерактивный цикл
+    // Interactive loop
     let shouldContinue = true;
 
     while (shouldContinue) {
       try {
-        // Шаг 1: Выбор коммита
+        // Step 1: Select commit
         const selectedCommit = await ui.selectCommit(commits, allowPushed);
 
         console.log("");
         console.log(chalk.green(t("cli.selectedCommit")), chalk.cyan(selectedCommit.hash));
 
-        // Шаг 2: Определение допустимого диапазона дат
+        // Step 2: Determine valid date range
         const commitIndex = commits.findIndex((c) => c.hash === selectedCommit.hash);
         const prevCommit = commitIndex < commits.length - 1 ? commits[commitIndex + 1] : null;
         const nextCommit = commitIndex > 0 ? commits[commitIndex - 1] : null;
@@ -159,10 +159,10 @@ async function main() {
 
         const validRange = validator.getValidDateRange(prevDate, nextDate);
 
-        // Шаг 3: Ввод новой даты
+        // Step 3: Enter new date
         const newDate = await ui.promptNewDate(selectedCommit.authorDate, validRange);
 
-        // Проверка: если дата не изменилась (сравниваем до минут, игнорируя секунды)
+        // Check: if date hasn't changed (compare to minutes, ignoring seconds)
         const oldDateStr = selectedCommit.authorDate.toISOString().substring(0, 16);
         const newDateStr = newDate.toISOString().substring(0, 16);
 
@@ -173,25 +173,25 @@ async function main() {
         } else {
           console.log(chalk.green(t("cli.newDate")), validator.formatDate(newDate));
 
-          // Шаг 4: Подтверждение изменений
+          // Step 4: Confirm changes
           const confirmed = await ui.confirmChanges(selectedCommit, newDate);
 
           if (!confirmed) {
             console.log(chalk.gray(t("cli.changeCancelled")));
             console.log("");
           } else {
-            // Шаг 5: Применение изменений
+            // Step 5: Apply changes
             await dateChanger.validateAndChange(selectedCommit, newDate, prevDate, nextDate);
 
             ui.showSuccess(selectedCommit);
           }
         }
 
-        // Шаг 6: Спросить о продолжении
+        // Step 6: Ask to continue
         shouldContinue = await ui.askContinue();
 
         if (shouldContinue) {
-          // Обновить список коммитов
+          // Update commit list
           if (allowPushed) {
             commits = await gitService.getAllCommits(count);
           } else {
@@ -225,7 +225,7 @@ async function main() {
   }
 }
 
-// Запуск
+// Run
 main().catch((error) => {
   console.error(t("errors.unhandledError"), error);
   process.exit(1);
