@@ -10,6 +10,7 @@ import { DateValidator } from "./core/validator.js";
 import { DateChanger } from "./core/date-changer.js";
 import { MessageFormatter } from "./core/messages.js";
 import { UIPrompts } from "./ui/prompts.js";
+import { CliRunner } from "./core/cli-runner.js";
 import { Commit } from "./types/index.js";
 import { initI18n, t } from "./i18n.js";
 
@@ -28,6 +29,11 @@ program
   .option("--allow-pushed", "Allow modification of pushed commits")
   .option("--all", "Alias for --allow-pushed")
   .option("--count <number>", "Number of commits to display", "10")
+  // Режим командной строки
+  .option("--hash <hash>", "Commit hash to change (CLI mode)")
+  .option("-d, --date <date>", "New date in ISO 8601 format (CLI mode)")
+  .option("--no-confirm", "Skip all confirmations (USE WITH CAUTION)")
+  .option("--json", "Output result in JSON format")
   .parse(process.argv);
 
 const options = program.opts();
@@ -57,7 +63,50 @@ async function main() {
     // Проверка uncommitted изменений
     const hasUncommitted = await gitService.hasUncommittedChanges();
     if (hasUncommitted) {
+      if (options.json) {
+        console.log(
+          JSON.stringify({
+            success: false,
+            error: t("cli.uncommittedChanges"),
+            errorCode: "UNCOMMITTED_CHANGES",
+          }),
+        );
+        process.exit(1);
+      }
       ui.showError(t("cli.uncommittedChanges"));
+      process.exit(1);
+    }
+
+    // РЕЖИМ КОМАНДНОЙ СТРОКИ
+    if (options.hash && options.date) {
+      const runner = new CliRunner(gitService, validator, dateChanger);
+      const result = await runner.execute({
+        hash: options.hash,
+        date: options.date,
+        noConfirm: options.confirm === false, // commander преобразует --no-confirm в confirm: false
+        json: options.json || false,
+        allowPushed: options.allowPushed || options.all || false,
+      });
+
+      const output = runner.formatOutput(result, options.json || false);
+      console.log(output);
+      process.exit(result.success ? 0 : 1);
+    }
+
+    // Проверка: если указан только один из флагов - ошибка
+    if (options.hash || options.date) {
+      const error = "Both --hash and --date are required for CLI mode";
+      if (options.json) {
+        console.log(
+          JSON.stringify({
+            success: false,
+            error,
+            errorCode: "MISSING_REQUIRED_OPTIONS",
+          }),
+        );
+      } else {
+        console.error(`Error: ${error}`);
+      }
       process.exit(1);
     }
 

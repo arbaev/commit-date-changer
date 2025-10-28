@@ -34,4 +34,11 @@ export interface ValidationResult {
 export interface CliOptions {
   allowPushed?: boolean; // Разрешить изменение запушенных коммитов
   count?: number; // Количество коммитов для отображения
+  all?: boolean; // Алиас для allowPushed
+  lang?: string; // Язык интерфейса
+  // Режим командной строки
+  hash?: string; // Hash коммита для изменения
+  date?: string; // Новая дата в ISO 8601 формате
+  noConfirm?: boolean; // Пропустить все подтверждения
+  json?: boolean; // Вывод в JSON формате
 }

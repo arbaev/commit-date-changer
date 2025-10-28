@@ -71,7 +71,9 @@
     "unknownError": "Unknown error",
     "noCommits": "No commits available to modify",
     "userCancelled": "Operation cancelled by user",
-    "unhandledError": "Unhandled error:"
+    "unhandledError": "Unhandled error:",
+    "commitNotFound": "Commit {{hash}} not found",
+    "pushedNoConfirm": "Commit {{hash}} is pushed to {{remotes}}. Use --no-confirm to force change"
   },
   "preview": {
     "title": "📋 Preview changes:",

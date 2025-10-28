@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "tsx src/cli.ts",
-    "build": "tsup src/cli.ts --format esm --dts --clean",
+    "build": "tsup src/cli.ts --format esm --dts --clean && npm run build:locales",
+    "build:locales": "mkdir -p dist/locales && cp src/locales/*.json dist/locales/",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "vitest",
