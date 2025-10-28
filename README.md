@@ -1,5 +1,8 @@
 # commit-date-changer
 
+[![npm version](https://badge.fury.io/js/commit-date-changer.svg)](https://www.npmjs.com/package/commit-date-changer)
+[![npm downloads](https://img.shields.io/npm/dm/commit-date-changer.svg)](https://www.npmjs.com/package/commit-date-changer)
+
 An interactive CLI tool for safely changing Git commit dates with built-in validation and multi-language support.
 
 ## Features
