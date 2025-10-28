@@ -116,19 +116,29 @@ async function main() {
         // Шаг 3: Ввод новой даты
         const newDate = await ui.promptNewDate(selectedCommit.authorDate, validRange);
 
-        console.log(chalk.green('✓ Новая дата:'), validator.formatDate(newDate));
+        // Проверка: если дата не изменилась (сравниваем до минут, игнорируя секунды)
+        const oldDateStr = selectedCommit.authorDate.toISOString().substring(0, 16);
+        const newDateStr = newDate.toISOString().substring(0, 16);
 
-        // Шаг 4: Подтверждение изменений
-        const confirmed = await ui.confirmChanges(selectedCommit, newDate);
-
-        if (!confirmed) {
-          console.log(chalk.gray('Изменение отменено'));
+        if (newDateStr === oldDateStr) {
+          console.log('');
+          console.log(chalk.yellow('ℹ️  Дата не изменена, пропускаем операцию'));
           console.log('');
         } else {
-          // Шаг 5: Применение изменений
-          await dateChanger.validateAndChange(selectedCommit, newDate, prevDate, nextDate);
+          console.log(chalk.green('✓ Новая дата:'), validator.formatDate(newDate));
 
-          ui.showSuccess(selectedCommit);
+          // Шаг 4: Подтверждение изменений
+          const confirmed = await ui.confirmChanges(selectedCommit, newDate);
+
+          if (!confirmed) {
+            console.log(chalk.gray('Изменение отменено'));
+            console.log('');
+          } else {
+            // Шаг 5: Применение изменений
+            await dateChanger.validateAndChange(selectedCommit, newDate, prevDate, nextDate);
+
+            ui.showSuccess(selectedCommit);
+          }
         }
 
         // Шаг 6: Спросить о продолжении
