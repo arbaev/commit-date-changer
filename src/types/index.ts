@@ -29,21 +29,9 @@ export interface ValidationResult {
 }
 
 /**
- * Группировка коммитов по статусу push
- */
-export interface CommitGroups {
-  unpushed: Commit[];
-  pushed: Commit[];
-}
-
-/**
  * Опции CLI команды
  */
 export interface CliOptions {
   allowPushed?: boolean; // Разрешить изменение запушенных коммитов
   count?: number; // Количество коммитов для отображения
-  branch?: string; // Конкретная ветка
-  hash?: string; // Конкретный hash коммита (неинтерактивный режим)
-  date?: string; // Новая дата (неинтерактивный режим)
-  force?: boolean; // Пропустить подтверждения (неинтерактивный режим)
 }

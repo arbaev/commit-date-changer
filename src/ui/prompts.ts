@@ -1,8 +1,7 @@
 import inquirer from "inquirer";
-import { text, isCancel } from "@clack/prompts";
 import chalk from "chalk";
 import { Commit, DateRange } from "../types/index.js";
-import { SafetyService } from "../core/safety.js";
+import { MessageFormatter } from "../core/messages.js";
 import { DateValidator } from "../core/validator.js";
 
 /**
@@ -10,7 +9,7 @@ import { DateValidator } from "../core/validator.js";
  */
 export class UIPrompts {
   constructor(
-    private safetyService: SafetyService,
+    private messageFormatter: MessageFormatter,
     private validator: DateValidator,
   ) {}
 
@@ -18,7 +17,7 @@ export class UIPrompts {
    * Показать начальное предупреждение для режима --allow-pushed
    */
   async confirmPushedMode(): Promise<boolean> {
-    console.log(this.safetyService.getInitialWarning());
+    console.log(this.messageFormatter.getInitialWarning());
 
     const answer = await inquirer.prompt([
       {
@@ -62,7 +61,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     type ChoiceItem = { name: string; value: Commit; short: string } | inquirer.Separator;
 
     const choices: ChoiceItem[] = commits.map((commit, index) => ({
-      name: `${index + 1}. ${this.safetyService.formatCommitName(commit)}`,
+      name: `${index + 1}. ${this.messageFormatter.formatCommitName(commit)}`,
       value: commit,
       short: commit.hash,
     }));
@@ -107,7 +106,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
    * Подтверждение изменения запушенного коммита
    */
   async confirmPushedCommit(commit: Commit): Promise<boolean> {
-    console.log(this.safetyService.getCommitWarning(commit));
+    console.log(this.messageFormatter.getCommitWarning(commit));
 
     const answer = await inquirer.prompt([
       {
@@ -136,46 +135,51 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     // Форматируем текущую дату для предзаполнения (без секунд)
     const initialDate = currentDate.toISOString().substring(0, 16);
 
-    const answer = await text({
-      message: "Введите новую дату и время (ISO формат: YYYY-MM-DDTHH:mm)",
-      initialValue: initialDate,
-      placeholder: "YYYY-MM-DDTHH:mm",
-      validate: (value: string) => {
-        // Если пользователь оставил текущее значение без изменений
-        if (!value || value.trim() === "") {
-          return; // Валидация прошла
-        }
+    const answer = await inquirer.prompt([
+      {
+        type: "input",
+        name: "date",
+        message: "Введите новую дату и время (ISO формат: YYYY-MM-DDTHH:mm)",
+        default: initialDate,
+        validate: (value: string) => {
+          // Если пользователь оставил текущее значение без изменений
+          if (!value || value.trim() === "") {
+            return true; // Валидация прошла
+          }
 
-        // Валидация формата
-        const formatValidation = this.validator.validateISOFormat(value);
-        if (!formatValidation.isValid) {
-          return formatValidation.error || "Невалидная дата";
-        }
+          // Валидация формата
+          const formatValidation = this.validator.validateISOFormat(value);
+          if (!formatValidation.isValid) {
+            return formatValidation.error || "Невалидная дата";
+          }
 
-        // Парсинг и валидация диапазона
-        const parsedDate = this.validator.parseDate(value);
-        if (!parsedDate) {
-          return "Ошибка парсинга даты";
-        }
+          // Парсинг и валидация диапазона
+          const parsedDate = this.validator.parseDate(value);
+          if (!parsedDate) {
+            return "Ошибка парсинга даты";
+          }
 
-        const rangeValidation = this.validator.validateDate(
-          parsedDate,
-          validRange.min,
-          validRange.max,
-        );
+          const rangeValidation = this.validator.validateDate(
+            parsedDate,
+            validRange.min,
+            validRange.max,
+          );
 
-        if (!rangeValidation.isValid) {
-          return rangeValidation.error || "Дата вне допустимого диапазона";
-        }
+          if (!rangeValidation.isValid) {
+            return rangeValidation.error || "Дата вне допустимого диапазона";
+          }
+
+          return true;
+        },
       },
-    });
+    ]);
 
     // Если пользователь оставил поле пустым, используем текущую дату
-    if (!answer || answer.trim() === "") {
+    if (!answer.date || answer.date.trim() === "") {
       return currentDate;
     }
 
-    const newDate = this.validator.parseDate(answer as string);
+    const newDate = this.validator.parseDate(answer.date);
     if (!newDate) {
       throw new Error("Ошибка парсинга даты");
     }
@@ -207,7 +211,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     console.log("   Изменяются:  ", chalk.gray("Author Date + Committer Date"));
 
     if (commit.isPushed) {
-      console.log(this.safetyService.getFinalWarning(commit));
+      console.log(this.messageFormatter.getFinalWarning(commit));
     }
 
     console.log("");
@@ -254,7 +258,7 @@ ${chalk.green("═══ НЕЗАПУШЕННЫЕ")} (безопасно изм�
     console.log(chalk.green("✨ Дата коммита успешно изменена!"));
 
     if (commit.isPushed) {
-      console.log(this.safetyService.showPostChangeInstructions(commit));
+      console.log(this.messageFormatter.showPostChangeInstructions(commit));
     }
 
     console.log("");

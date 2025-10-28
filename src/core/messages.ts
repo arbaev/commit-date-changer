@@ -2,9 +2,9 @@ import chalk from 'chalk';
 import { Commit } from '../types/index.js';
 
 /**
- * Сервис безопасности для работы с запушенными коммитами
+ * Сервис для форматирования сообщений и предупреждений
  */
-export class SafetyService {
+export class MessageFormatter {
   /**
    * Проверить, требуется ли режим с запушенными коммитами
    */

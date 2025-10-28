@@ -2,19 +2,29 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { GitService } from './core/git.js';
 import { DateValidator } from './core/validator.js';
 import { DateChanger } from './core/date-changer.js';
-import { SafetyService } from './core/safety.js';
+import { MessageFormatter } from './core/messages.js';
 import { UIPrompts } from './ui/prompts.js';
 import { Commit } from './types/index.js';
+
+// Получение версии из package.json
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(
+  readFileSync(join(__dirname, '../package.json'), 'utf-8')
+);
 
 const program = new Command();
 
 program
   .name('commit-date')
   .description('Interactive CLI tool to safely change Git commit dates')
-  .version('1.0.0')
+  .version(packageJson.version)
   .option('--allow-pushed', 'Разрешить изменение запушенных коммитов')
   .option('--all', 'Алиас для --allow-pushed')
   .option('--count <number>', 'Количество коммитов для отображения', '10')
@@ -31,8 +41,8 @@ async function main() {
     const gitService = new GitService();
     const validator = new DateValidator();
     const dateChanger = new DateChanger(gitService, validator);
-    const safetyService = new SafetyService();
-    const ui = new UIPrompts(safetyService, validator);
+    const messageFormatter = new MessageFormatter();
+    const ui = new UIPrompts(messageFormatter, validator);
 
     // Проверка Git репозитория
     const isGitRepo = await gitService.isGitRepository();
