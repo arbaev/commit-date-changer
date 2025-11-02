@@ -7,15 +7,15 @@ An interactive CLI tool for safely changing Git commit dates with built-in valid
 
 ## Features
 
-- 🔒 **Safe by default** - Works with unpushed commits by default
-- 💻 **Two modes** - Interactive UI or CLI mode for automation
-- ⚠️ **Safety warnings** - Multiple protection layers when working with pushed commits
-- ✅ **Smart validation** - Automatic chronological order checking
-- 🎨 **Interactive UI** - User-friendly interface with colored output
-- 🌍 **Multilingual** - Support for English and Russian
-- 🔄 **Batch processing** - Change multiple commits in one session
-- 📅 **ISO format** - Simple and unambiguous date format (YYYY-MM-DDTHH:mm)
-- 📊 **JSON output** - Structured output for automation and scripting
+- **Safe by default** - Works with unpushed commits by default
+- **Two modes** - Interactive UI or CLI mode for automation
+- **Safety warnings** - Multiple protection layers when working with pushed commits
+- **Smart validation** - Automatic chronological order checking
+- **Interactive UI** - User-friendly interface with colored output
+- **Multilingual** - Support for English and Russian
+- **Batch processing** - Change multiple commits in one session
+- **ISO format** - Simple and unambiguous date format (YYYY-MM-DDTHH:mm)
+- **JSON output** - Structured output for automation and scripting
 
 ## Installation
 
@@ -53,6 +53,7 @@ The tool will:
 ```bash
 commit-date --count 20              # Show more commits (default: 10)
 commit-date --allow-pushed          # Include pushed commits (⚠️ dangerous)
+commit-date --lang ru               # Set russian language
 ```
 
 ### CLI Mode (For Automation)
@@ -77,6 +78,8 @@ commit-date --hash abc1234 --date "2025-10-28T18:30" --allow-pushed --no-confirm
 - `--allow-pushed` - Allow working with pushed commits (⚠️ dangerous)
 - `--no-confirm` - Skip confirmations for pushed commits
 - `--json` - Output result in JSON format
+- `--lang <language>` - Set language: `en` (English) or `ru` (Русский)
+- `-l <language>` - Short form for --lang
 
 **JSON output example:**
 
