@@ -60,23 +60,6 @@ async function main() {
       process.exit(1);
     }
 
-    // Check uncommitted changes
-    const hasUncommitted = await gitService.hasUncommittedChanges();
-    if (hasUncommitted) {
-      if (options.json) {
-        console.log(
-          JSON.stringify({
-            success: false,
-            error: t("cli.uncommittedChanges"),
-            errorCode: "UNCOMMITTED_CHANGES",
-          }),
-        );
-        process.exit(1);
-      }
-      ui.showError(t("cli.uncommittedChanges"));
-      process.exit(1);
-    }
-
     // CLI MODE
     if (options.hash && options.date) {
       const runner = new CliRunner(gitService, validator, dateChanger);
